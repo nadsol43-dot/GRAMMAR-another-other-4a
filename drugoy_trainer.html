@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>«Другой» — быстрый тренажёр (4 задания)</title>
+<style>
+  :root{
+    --paper:#f3efe6; --card:#fffdf7; --ink:#22302e; --muted:#7a8785;
+    --teal:#0f766e; --teal-soft:#d9efec; --amber:#c2760a; --amber-soft:#fbecd3;
+    --line:#e2dccd; --ok:#157f3d; --ok-soft:#dff3e4; --bad:#b3352c; --bad-soft:#fbe3e0;
+    --shadow:0 2px 10px rgba(34,48,46,.07);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--ink); font-size:16px; line-height:1.5;
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif; font-weight:600; letter-spacing:-.2px}
+  .shell{max-width:900px;margin:0 auto;padding:0 16px 100px}
+
+  /* ---------- header ---------- */
+  header{background:linear-gradient(160deg,#0e5f59,#0f766e 55%,#13857b);color:#fff;padding:26px 0 22px}
+  header .shell{padding-bottom:0}
+  header h1{margin:0 0 4px;font-size:25px}
+  header p{margin:0;color:#c6e6e1;font-size:13.5px}
+  .pill{display:inline-block;background:rgba(255,255,255,.16);border-radius:20px;padding:2px 10px;font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+
+  /* ---------- tabs ---------- */
+  .tabs{position:sticky;top:0;z-index:30;background:rgba(243,239,230,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .tabs .shell{display:flex;gap:6px;padding:10px 16px;align-items:center;flex-wrap:wrap}
+  .tab{
+    font:inherit;font-size:14px;cursor:pointer;border:1px solid transparent;background:transparent;
+    color:#4c5a58;padding:8px 13px;border-radius:10px;display:flex;gap:8px;align-items:center;transition:.15s;
+  }
+  .tab b{font-family:Georgia,serif;font-size:13px;width:19px;height:19px;display:grid;place-items:center;border-radius:50%;background:#e6e0d1;color:#5d5340}
+  .tab:hover{background:#eae4d7}
+  .tab.on{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:var(--shadow)}
+  .tab.on b{background:rgba(255,255,255,.24);color:#fff}
+  .tab .done{color:#8fbf74;font-weight:700}
+  .tab.on .done{color:#d8f5cf}
+  .meter{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:#5c6a68}
+  .bar{width:110px;height:8px;border-radius:8px;background:#e0d9c9;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--teal));transition:width .25s}
+
+  /* ---------- panels ---------- */
+  .panel{display:none}
+  .panel.on{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:20px 0;box-shadow:var(--shadow)}
+  .card > h2{margin:0 0 6px;font-size:20px}
+  .lead{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .lead b{color:#3d4a48}
+  .tag{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;background:var(--teal-soft);color:#0b5f59;padding:3px 9px;border-radius:20px;font-weight:700;vertical-align:middle;margin-left:9px}
+  .tag.amber{background:var(--amber-soft);color:#8a5310}
+
+  /* ---------- ex1: quick choice ---------- */
+  .qi{padding:13px 0;border-bottom:1px dashed #ece6d8;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .qi:last-child{border-bottom:none}
+  .qi .n{flex:0 0 26px;color:#a99f8a;font-size:13px;font-variant-numeric:tabular-nums}
+  .qi .tx{flex:1 1 320px;font-size:15.5px}
+  .btns{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;flex-basis:100%;padding-left:36px}
+  .opt{
+    font:inherit;font-size:14px;cursor:pointer;border:1.4px solid #d5cdba;background:#fffef9;
+    color:#33413f;padding:6px 14px;border-radius:10px;transition:.13s;
+  }
+  .opt:hover{border-color:var(--teal);background:#f2faf8}
+  .opt.ok{background:var(--ok-soft);border-color:var(--ok);color:#0d6b31;font-weight:700}
+  .opt.bad{background:var(--bad-soft);border-color:var(--bad);color:#95261e;text-decoration:line-through}
+  .opt.used{opacity:.5;pointer-events:none}
+
+  /* ---------- ex2: drag & drop ---------- */
+  .tray{display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1.4px dashed #cfc6b1;border-radius:12px;background:#fbf8ef;margin-bottom:16px;min-height:52px}
+  .chip{
+    font:inherit;font-size:14px;cursor:grab;border:1.4px solid #bcd8d3;background:#fff;color:#17544f;
+    padding:6px 13px;border-radius:20px;user-select:none;transition:.12s;
+  }
+  .chip:hover{border-color:var(--teal);transform:translateY(-1px)}
+  .chip.sel{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 3px 10px rgba(15,118,110,.3)}
+  .chip.dragging{opacity:.35}
+  .chip.gone{display:none}
+  .story{background:#fbf9f2;border:1px solid #e8e1d1;border-radius:12px;padding:16px 18px;font-size:15.5px;line-height:2.5}
+  .drop{
+    display:inline-grid;place-items:center;min-width:130px;height:32px;padding:0 8px;margin:0 3px;
+    border-bottom:2px solid #a9a08e;border-radius:6px 6px 0 0;background:#fff;vertical-align:middle;
+    font-size:14px;color:#17544f;cursor:pointer;transition:.12s;
+  }
+  .drop.empty::after{content:"перетащи";font-size:11px;color:#bdb4a0;letter-spacing:.3px}
+  .drop.over{background:var(--teal-soft);border-bottom-color:var(--teal)}
+  .drop.filled{border-bottom-color:var(--teal)}
+  .drop.ok{background:var(--ok-soft);border-bottom-color:var(--ok);color:#0d6b31;font-weight:700}
+  .drop.bad{background:var(--bad-soft);border-bottom-color:var(--bad);color:#95261e}
+  .num{font-size:10.5px;color:#b0a893;vertical-align:super;margin-left:1px}
+
+  /* ---------- ex3: two buckets ---------- */
+  .sortlist{display:grid;gap:9px;margin-bottom:16px}
+  .sitem{
+    display:flex;gap:10px;align-items:center;background:#fffdf7;border:1.4px solid #ddd5c2;
+    border-radius:11px;padding:9px 12px;font-size:14.5px;cursor:grab;transition:.12s;
+  }
+  .sitem:hover{border-color:var(--teal)}
+  .sitem.sel{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-soft)}
+  .sitem .grip{color:#c3bba6;font-size:15px;line-height:1}
+  .sitem.ok{border-color:var(--ok);background:var(--ok-soft)}
+  .sitem.bad{border-color:var(--bad);background:var(--bad-soft)}
+  .sitem .mark{margin-left:auto;font-size:13px;font-weight:700}
+  .buckets{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .bucket{border:2px dashed #cfc6b1;border-radius:14px;padding:12px;min-height:120px;background:#fbf8ef;transition:.12s}
+  .bucket h3{margin:0 0 8px;font-size:14px;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+  .bucket h3 span{font-family:"Segoe UI",sans-serif;font-weight:400;font-size:11.5px;color:#8d8672;letter-spacing:0}
+  .bucket.over{border-color:var(--teal);background:var(--teal-soft)}
+  .bucket .inside{display:grid;gap:7px}
+  .bucket .inside .sitem{font-size:13.5px;padding:7px 10px;cursor:pointer}
+  .bucket.win{border-color:var(--ok)}
+
+  /* ---------- ex4: blitz ---------- */
+  .blitzTop{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .clock{font-family:Georgia,serif;font-size:20px;min-width:62px;color:var(--teal)}
+  .clock.low{color:var(--bad)}
+  .blitz{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+  .blitz li{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);
+    border-radius:11px;background:#fffdf7;font-size:15px;
+  }
+  .blitz li .ru{flex:1 1 240px;color:#3b4a48}
+  .blitz li .en{display:flex;gap:7px;flex-wrap:wrap}
+  .blitz li.now{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+  .blitz li.locked{opacity:.85}
+
+  /* ---------- shared ---------- */
+  .actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  button.btn{font:inherit;font-size:14px;cursor:pointer;border-radius:10px;padding:9px 15px;border:1.4px solid #d5cdba;background:#fff;color:#33413f;transition:.14s}
+  button.btn:hover{background:#f6f2e7}
+  button.btn.main{background:var(--teal);border-color:var(--teal);color:#fff}
+  button.btn.main:hover{background:#0c655f}
+  button.btn.amber{background:var(--amber);border-color:var(--amber);color:#fff}
+  button.btn.amber:hover{background:#a9620a}
+  .res{margin-left:auto;font-size:13.5px;font-weight:700;color:#2f3d3b}
+  .rule{background:var(--teal-soft);border-radius:12px;padding:12px 15px;font-size:13.5px;color:#14413c;margin:0 0 16px}
+  .rule b{color:#0b5f59}
+  .hintline{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,24px);opacity:0;pointer-events:none;
+    background:#22302e;color:#fff;font-size:14px;padding:10px 18px;border-radius:12px;transition:.22s;z-index:60;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media (max-width:620px){
+    .buckets{grid-template-columns:1fr}
+    .card{padding:16px 15px}
+    .drop{min-width:104px;font-size:13px}
+    header h1{font-size:21px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <h1>«Другой» — быстрый тренажёр <span class="pill">4 задания</span></h1>
+    <p>another · other · the other · others · the others · each other / one another</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="shell">
+    <button class="tab on" data-tab="1"><b>1</b> Быстрый выбор <span class="done" id="d1"></span></button>
+    <button class="tab" data-tab="2"><b>2</b> Перетащи слово <span class="done" id="d2"></span></button>
+    <button class="tab" data-tab="3"><b>3</b> Две корзины <span class="done" id="d3"></span></button>
+    <button class="tab" data-tab="4"><b>4</b> Блиц <span class="done" id="d4"></span></button>
+    <div class="meter">
+      <div class="bar"><i id="bar"></i></div>
+      <span id="total">0 / 34</span>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ==================== 1 ==================== -->
+  <section class="panel on" id="p1">
+    <div class="card">
+      <h2>1. Быстрый выбор <span class="tag">клик</span></h2>
+      <p class="lead">Нажми на верную форму. Ответ проверяется сразу — <b>повторно нельзя</b>, так что думай до клика.</p>
+      <div class="rule"><b>others</b> — «какие-то другие», круг не очерчен (<i>some people → others</i>). <b>the others</b> — все остальные из названного круга (<i>some of my friends, five of us → the others</i>).</div>
+      <div id="ex1"></div>
+      <div class="actions">
+        <button class="btn" data-reset="1">Начать заново</button>
+        <span class="res" id="r1"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 2 ==================== -->
+  <section class="panel" id="p2">
+    <div class="card">
+      <h2>2. Перетащи слово <span class="tag">drag &amp; drop</span></h2>
+      <p class="lead">Перетащи подходящее слово в пропуск. На планшете и телефоне: <b>нажми слово</b>, потом <b>нажми пропуск</b>. Лишние слова останутся в банке.</p>
+      <div class="tray" id="tray2"></div>
+      <div class="story" id="story2"></div>
+      <div class="actions">
+        <button class="btn amber" id="check2">Проверить</button>
+        <button class="btn" data-reset="2">Заново</button>
+        <span class="res" id="r2"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3 ==================== -->
+  <section class="panel" id="p3">
+    <div class="card">
+      <h2>3. Две корзины <span class="tag amber">сортировка</span></h2>
+      <p class="lead">Реши, что нужно в каждом предложении: <b>others</b> или <b>the others</b>. Перетащи карточку в корзину — или нажми карточку, затем корзину.</p>
+      <div class="rule">Подсказка: если перед «остальными» можно вставить <i>the rest</i> и это правда — корзина справа.</div>
+      <div class="sortlist" id="sort3"></div>
+      <div class="buckets">
+        <div class="bucket" data-bucket="others">
+          <h3>others <span>какие-то другие</span></h3>
+          <div class="inside" data-inside="others"></div>
+        </div>
+        <div class="bucket" data-bucket="the others">
+          <h3>the others <span>все остальные</span></h3>
+          <div class="inside" data-inside="the others"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn amber" id="check3">Проверить</button>
+        <button class="btn" data-reset="3">Заново</button>
+        <span class="res" id="r3"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 4 ==================== -->
+  <section class="panel" id="p4">
+    <div class="card">
+      <h2>4. Блиц: 60 секунд <span class="tag amber">на время</span></h2>
+      <p class="lead">Русская фраза → верный английский вариант. Таймер стартует с первым кликом. Он ничего не блокирует — просто показывает темп.</p>
+      <div class="blitzTop">
+        <div class="clock" id="clock">1:00</div>
+        <button class="btn amber" id="startBlitz">Старт</button>
+        <span class="res" id="r4"></span>
+      </div>
+      <ul class="blitz" id="ex4"></ul>
+      <div class="actions">
+        <button class="btn" data-reset="4">Заново</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = (s,r)=>(r||document).querySelector(s);
+  const $$ = (s,r)=>Array.prototype.slice.call((r||document).querySelectorAll(s));
+  const mk = (t,c,x)=>{const e=document.createElement(t); if(c)e.className=c; if(x!=null)e.textContent=x; return e;};
+  const norm = v => String(v||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[.,!?;:]/g,"").replace(/\s+/g," ").trim();
+
+  /* ---------- state ---------- */
+  const STATE = {1:{ok:0,all:10}, 2:{ok:0,all:8}, 3:{ok:0,all:8}, 4:{ok:0,all:8}};
+  const TOTAL = 34;
+
+  function refresh(){
+    let sum = 0;
+    [1,2,3,4].forEach(k=>sum += STATE[k].ok);
+    $("#total").textContent = sum + " / " + TOTAL;
+    $("#bar").style.width = Math.round(sum / TOTAL * 100) + "%";
+    [1,2,3,4].forEach(k=>{
+      const el = $("#d"+k), st = STATE[k];
+      el.textContent = st.touched ? (st.ok === st.all ? "✓" : st.ok + "/" + st.all) : "";
+    });
+  }
+  const toastEl = $("#toast"); let toastT;
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(()=>toastEl.classList.remove("show"), 2100);
+  }
+
+  /* ================= EX 1 · быстрый выбор ================= */
+  const EX1 = [
+    {t:"I don’t like this coffee. Could I have ___ cup, please?", o:["another","other","the other"], a:"another"},
+    {t:"I have two sisters: one is a doctor, and ___ is a teacher.", o:["another","the other","others"], a:"the other"},
+    {t:"Some people learn languages for work, and ___ learn them for pleasure.", o:["others","the others","the other"], a:"others"},
+    {t:"Five students in our group passed the test; ___ failed it.", o:["others","the others","another"], a:"the others"},
+    {t:"Don’t compare yourself with ___ people all the time.", o:["other","others","another"], a:"other"},
+    {t:"Kate and Ann are neighbours: they borrow things from ___ all the time.", o:["another","each other","the other"], a:"each other"},
+    {t:"This pen doesn’t work. Give me ___ one, please.", o:["another","the other","others"], a:"another"},
+    {t:"Where are ___? Did they all go home?", o:["the others","others","the other"], a:"the others"},
+    {t:"Our house is on one side of the street, and the shop is on ___ side.", o:["another","the other","other"], a:"the other"},
+    {t:"He’s always ready to help ___ — even people he has never met.", o:["others","the others","another"], a:"others"}
+  ];
+  let ex1ok = 0;
+  function renderEx1(){
+    const host = $("#ex1"); host.innerHTML = ""; ex1ok = 0;
+    STATE[1].ok = 0; STATE[1].touched = false; $("#r1").textContent = "";
+    EX1.forEach((it,i)=>{
+      const row = mk("div","qi");
+      row.appendChild(mk("span","n",(i+1)+"."));
+      const tx = mk("div","tx"); tx.textContent = it.t; row.appendChild(tx);
+      const bs = mk("div","btns");
+      it.o.forEach(o=>{
+        const b = mk("button","opt",o); b.type = "button";
+        b.addEventListener("click",()=>{
+          if (row.dataset.done) return;
+          row.dataset.done = "1";
+          $$(".opt", bs).forEach(x=>x.classList.add("used"));
+          const right = $$(".opt", bs).find(x=>x.textContent === it.a);
+          if (o === it.a){ b.classList.remove("used"); b.classList.add("ok"); ex1ok++; }
+          else { b.classList.remove("used"); b.classList.add("bad"); right.classList.remove("used"); right.classList.add("ok"); }
+          STATE[1].ok = ex1ok; STATE[1].touched = true;
+          $("#r1").textContent = ex1ok + " / " + EX1.length;
+          refresh();
+        });
+        bs.appendChild(b);
+      });
+      row.appendChild(bs);
+      host.appendChild(row);
+    });
+    refresh();
+  }
+
+  /* ================= EX 2 · drag & drop ================= */
+  const EX2 = {
+    parts:[
+      "My cousin and I are very different from ", {g:1},
+      ". She has two big passions: one is volleyball, and ", {g:2},
+      " is drawing. Some of her friends play volleyball too, and ", {g:3},
+      " just come to watch. Last Saturday five girls were training, and ", {g:4},
+      " were sitting on the bench. I didn’t want to play, so she gave me ", {g:5},
+      " ball to hold. ", {g:6},
+      " people’s opinions don’t matter to her at all. I liked the club so much that I asked if I could come ", {g:7},
+      " time. Now we train together and always support ", {g:8}, "."
+    ],
+    answers:{1:["each other","one another"],2:["the other"],3:["the others"],4:["the others"],
+             5:["another"],6:["other"],7:["another"],8:["each other","one another"]},
+    chips:["each other","the other","the others","the others","another","other","another","each other","others","one another"]
+  };
+  let selChip = null;
+  function buildEx2(){
+    const tray = $("#tray2"), story = $("#story2");
+    tray.innerHTML = ""; story.innerHTML = ""; selChip = null;
+    STATE[2].ok = 0; STATE[2].touched = false;
+    $("#r2").textContent = "";
+
+    EX2.chips.forEach((w,i)=>{
+      const c = mk("button","chip",w);
+      c.type = "button"; c.draggable = true; c.dataset.w = w; c.dataset.id = "c"+i;
+      c.addEventListener("dragstart",e=>{ c.classList.add("dragging"); e.dataTransfer.setData("text/plain", c.dataset.id); e.dataTransfer.effectAllowed = "move"; });
+      c.addEventListener("dragend",()=>c.classList.remove("dragging"));
+      c.addEventListener("click",()=>{
+        if (selChip === c){ c.classList.remove("sel"); selChip = null; return; }
+        if (selChip) selChip.classList.remove("sel");
+        selChip = c; c.classList.add("sel");
+      });
+      tray.appendChild(c);
+    });
+
+    EX2.parts.forEach(part=>{
+      if (typeof part === "string"){ story.appendChild(document.createTextNode(part)); return; }
+      const d = mk("span","drop empty");
+      d.dataset.gap = part.g;
+      d.appendChild(mk("span","num","("+part.g+")"));
+      d.addEventListener("dragover",e=>{ e.preventDefault(); d.classList.add("over"); });
+      d.addEventListener("dragleave",()=>d.classList.remove("over"));
+      d.addEventListener("drop",e=>{
+        e.preventDefault(); d.classList.remove("over");
+        const id = e.dataTransfer.getData("text/plain");
+        const chip = $('.chip[data-id="'+id+'"]');
+        if (chip) putChip(d, chip);
+      });
+      d.addEventListener("click",()=>{
+        if (selChip){ putChip(d, selChip); selChip.classList.remove("sel"); selChip = null; return; }
+        if (d.dataset.word) takeBack(d);
+      });
+      story.appendChild(d);
+      story.appendChild(document.createTextNode(" "));
+    });
+    refresh();
+  }
+  function putChip(drop, chip){
+    if (drop.dataset.cid){                       // вернуть старое слово в банк
+      const old = $('.chip[data-id="'+drop.dataset.cid+'"]');
+      if (old) old.classList.remove("gone");
+    }
+    drop.dataset.word = chip.dataset.w;
+    drop.dataset.cid = chip.dataset.id;
+    drop.classList.remove("empty","ok","bad");
+    drop.classList.add("filled");
+    drop.textContent = "";
+    drop.appendChild(document.createTextNode(chip.dataset.w));
+    drop.appendChild(mk("span","num","("+drop.dataset.gap+")"));
+    chip.classList.add("gone");
+  }
+  function takeBack(drop){
+    const chip = $('.chip[data-id="'+drop.dataset.cid+'"]');
+    if (chip) chip.classList.remove("gone");
+    delete drop.dataset.word; delete drop.dataset.cid;
+    drop.classList.remove("filled","ok","bad");
+    drop.classList.add("empty");
+    drop.textContent = "";
+    drop.appendChild(mk("span","num","("+drop.dataset.gap+")"));
+  }
+  $("#check2").addEventListener("click",()=>{
+    let ok = 0, gaps = 0;
+    $$("#story2 .drop").forEach(d=>{
+      gaps++;
+      const right = EX2.answers[d.dataset.gap] || [];
+      const got = d.dataset.word;
+      d.classList.remove("ok","bad");
+      if (!got) return;
+      if (right.map(norm).indexOf(norm(got)) > -1){ d.classList.add("ok"); ok++; }
+      else { d.classList.add("bad"); }
+    });
+    STATE[2].ok = ok; STATE[2].touched = true;
+    $("#r2").textContent = ok + " / " + gaps;
+    refresh();
+    toast(ok === gaps ? "Все верно!" : "Красные — неверные: замени слово и проверь снова");
+  });
+
+  /* ================= EX 3 · две корзины ================= */
+  const EX3 = [
+    {t:"Some people like tea, and ___ like coffee.", a:"others"},
+    {t:"Some of my classmates speak French, and ___ speak German.", a:"the others"},
+    {t:"Some books are boring, and ___ are really exciting.", a:"others"},
+    {t:"Five of us passed the test; ___ failed it.", a:"the others"},
+    {t:"Some travellers go by train, and ___ fly.", a:"others"},
+    {t:"Some of the neighbours are very friendly, and ___ hardly say hello.", a:"the others"},
+    {t:"Ten students came to the party; ___ stayed at home.", a:"the others"},
+    {t:"Some songs he writes himself; ___ were written by his brother.", a:"others"}
+  ];
+  let selItem = null;
+  function buildEx3(){
+    const host = $("#sort3"); host.innerHTML = ""; selItem = null;
+    $$(".bucket .inside").forEach(x=>x.innerHTML = "");
+    $$(".bucket").forEach(b=>b.classList.remove("win"));
+    STATE[3].ok = 0; STATE[3].touched = false; $("#r3").textContent = "";
+    EX3.forEach((it,i)=>{
+      const row = mk("div","sitem");
+      row.draggable = true; row.dataset.a = it.a; row.dataset.id = "s"+i;
+      row.appendChild(mk("span","grip","⋮⋮"));
+      row.appendChild(mk("span",null,it.t));
+      row.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain", row.dataset.id); e.dataTransfer.effectAllowed = "move"; });
+      row.addEventListener("click",()=>{
+        if (selItem === row){ row.classList.remove("sel"); selItem = null; return; }
+        if (selItem) selItem.classList.remove("sel");
+        selItem = row; row.classList.add("sel");
+      });
+      host.appendChild(row);
+    });
+    refresh();
+  }
+  $$(".bucket").forEach(b=>{
+    b.addEventListener("dragover",e=>{ e.preventDefault(); b.classList.add("over"); });
+    b.addEventListener("dragleave",()=>b.classList.remove("over"));
+    b.addEventListener("drop",e=>{
+      e.preventDefault(); b.classList.remove("over");
+      const row = $('.sitem[data-id="'+e.dataTransfer.getData("text/plain")+'"]');
+      if (row){ moveTo(row, b); selItem = null; }
+    });
+    b.addEventListener("click",e=>{
+      if (!selItem) return;
+      if (e.target.closest(".sitem")) return;
+      moveTo(selItem, b); selItem.classList.remove("sel"); selItem = null;
+    });
+  });
+  function moveTo(row, bucket){
+    const inside = $('.inside[data-inside="'+bucket.dataset.bucket+'"]');
+    row.classList.remove("sel","ok","bad");
+    row.querySelectorAll(".mark").forEach(m=>m.remove());
+    inside.appendChild(row);
+  }
+  $("#check3").addEventListener("click",()=>{
+    let ok = 0, placed = 0;
+    $$(".bucket").forEach(b=>{
+      $$(".inside .sitem", b).forEach(row=>{
+        placed++;
+        row.classList.remove("ok","bad");
+        row.querySelectorAll(".mark").forEach(m=>m.remove());
+        if (row.dataset.a === b.dataset.bucket){ row.classList.add("ok"); ok++; row.appendChild(mk("span","mark","✓")); }
+        else { row.classList.add("bad"); row.appendChild(mk("span","mark","→ "+row.dataset.a)); }
+      });
+    });
+    if (!placed){ toast("Сначала разложи карточки по корзинам"); return; }
+    STATE[3].ok = ok; STATE[3].touched = true;
+    $("#r3").textContent = ok + " / " + EX3.length;
+    refresh();
+    toast(ok === EX3.length ? "Идеально! Правило усвоено" : "Ошибки помечены — перенеси карточку и проверь снова");
+  });
+
+  /* ================= EX 4 · блиц ================= */
+  const EX4 = [
+    {ru:"Дай мне другую ручку (любую).", o:["another pen","the other pen"], a:"another pen"},
+    {ru:"Где остальные?", o:["Where are others?","Where are the others?"], a:"Where are the others?"},
+    {ru:"Они всегда помогают друг другу.", o:["they always help each other","they always help the other"], a:"they always help each other"},
+    {ru:"Он живёт на другой стороне улицы.", o:["on another side","on the other side"], a:"on the other side"},
+    {ru:"Некоторые любят чай, другие — кофе.", o:["some like tea, others like coffee","some like tea, the others like coffee"], a:"some like tea, others like coffee"},
+    {ru:"Я хочу ещё одно яблоко.", o:["I want another apple","I want the other apple"], a:"I want another apple"},
+    {ru:"Другие люди тоже придут.", o:["Other people will come too","Others people will come too"], a:"Other people will come too"},
+    {ru:"Две девочки ушли, остальные остались.", o:["two girls left, others stayed","two girls left, the others stayed"], a:"two girls left, the others stayed"}
+  ];
+  let ex4ok = 0, timer = null, left = 60;
+  const fmt = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+  function buildEx4(){
+    const ul = $("#ex4"); ul.innerHTML = ""; ex4ok = 0;
+    STATE[4].ok = 0; STATE[4].touched = false; $("#r4").textContent = "";
+    clearInterval(timer); timer = null; left = 60;
+    $("#clock").textContent = "1:00"; $("#clock").classList.remove("low");
+    EX4.forEach((it,i)=>{
+      const li = mk("li");
+      li.appendChild(mk("span","ru",(i+1)+". "+it.ru));
+      const en = mk("div","en");
+      it.o.forEach(o=>{
+        const b = mk("button","opt",o); b.type = "button";
+        b.addEventListener("click",()=>{
+          if (li.dataset.done) return;
+          li.dataset.done = "1";
+          $$(".opt", en).forEach(x=>x.classList.add("used"));
+          const right = $$(".opt", en).find(x=>x.textContent === it.a);
+          if (o === it.a){ b.classList.remove("used"); b.classList.add("ok"); ex4ok++; }
+          else { b.classList.remove("used"); b.classList.add("bad"); right.classList.remove("used"); right.classList.add("ok"); }
+          STATE[4].ok = ex4ok; STATE[4].touched = true;
+          $("#r4").textContent = ex4ok + " / " + EX4.length;
+          refresh();
+        });
+        en.appendChild(b);
+      });
+      li.appendChild(en);
+      ul.appendChild(li);
+    });
+    refresh();
+  }
+  $("#startBlitz").addEventListener("click",()=>{
+    if (timer) return;
+    toast("Поехали! 60 секунд");
+    timer = setInterval(()=>{
+      left--;
+      $("#clock").textContent = fmt(Math.max(left,0));
+      if (left <= 10) $("#clock").classList.add("low");
+      if (left <= 0){ clearInterval(timer); timer = null; $("#clock").textContent = "время!"; }
+    }, 1000);
+  });
+
+  /* ================= tabs & resets ================= */
+  $$(".tab").forEach(t=>t.addEventListener("click",()=>{
+    $$(".tab").forEach(x=>x.classList.remove("on"));
+    t.classList.add("on");
+    $$(".panel").forEach(p=>p.classList.remove("on"));
+    $("#p"+t.dataset.tab).classList.add("on");
+  }));
+  $$("[data-reset]").forEach(b=>b.addEventListener("click",()=>{
+    const k = b.dataset.reset;
+    if (k === "1") renderEx1();
+    if (k === "2") buildEx2();
+    if (k === "3") buildEx3();
+    if (k === "4") buildEx4();
+    toast("Заново");
+  }));
+
+  /* ================= init ================= */
+  renderEx1(); buildEx2(); buildEx3(); buildEx4(); refresh();
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a51c4504fcd3faac',t:'MTc5MzIxNDkzMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
